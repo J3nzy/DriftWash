@@ -1,4 +1,5 @@
 using DriftWash;
+using System.Linq;
 using UnityEngine;
 
 namespace DriftWash
@@ -231,7 +232,9 @@ namespace DriftWash
                     // Add safety checks for braking
                     if (axleInfo.leftWheel != null) axleInfo.leftWheel.brakeTorque = brakeTorque;
                     if (axleInfo.rightWheel != null) axleInfo.rightWheel.brakeTorque = brakeTorque;
-                }
+                ApplyDriftFriction(axleInfo.leftWheel);
+                ApplyDriftFriction(axleInfo.rightWheel);
+            }
                 else
                 {
                     rb.constraints = RigidbodyConstraints.None;
@@ -239,9 +242,35 @@ namespace DriftWash
                     // Add safety checks for releasing brakes
                     if (axleInfo.leftWheel != null) axleInfo.leftWheel.brakeTorque = 0;
                     if (axleInfo.rightWheel != null) axleInfo.rightWheel.brakeTorque = 0;
-                }
+                    ResetDriftFunction(axleInfo.leftWheel);
+                    ResetDriftFunction(axleInfo.rightWheel);
+            }
             }
         }
+
+    void ResetDriftFunction(WheelCollider wheel)
+    {
+        AxleInfo axleInfo = axleInfos.FirstOrDefault(axle => axle.leftWheel == wheel || axle.rightWheel == wheel);
+        if (axleInfo == null) return;
+
+        wheel.forwardFriction = axleInfo.originalForwardFriction;
+        wheel.sidewaysFriction = axleInfo.originalSidewaysFriction;
+    }
+
+    void ApplyDriftFriction(WheelCollider wheel)
+    {
+        if (wheel.GetGroundHit(out var hit)) {
+            wheel.forwardFriction = UpdateFriction(wheel.forwardFriction);
+            wheel.sidewaysFriction = UpdateFriction(wheel.sidewaysFriction);
+            IsGrounded = true;
+        }
+    }
+
+    WheelFrictionCurve UpdateFriction(WheelFrictionCurve friction)
+    {
+        friction.stiffness = input.IsBraking ? Mathf.SmoothDamp(current: friction.stiffness, target: 5f, ref driftVelocity, smoothTime: Time.deltaTime * 2f) : 1f;
+        return friction;
+    }
 
 
         float AdjustInput(float input)
