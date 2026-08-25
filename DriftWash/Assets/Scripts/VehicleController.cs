@@ -10,16 +10,24 @@ namespace DriftWash
         public WheelCollider rightWheel;
         public Transform leftRowMesh;
         public Transform rightRowMesh;
+
+        // Floats to hold the custom Y-axis angles for the wheels
+        public float leftMeshYOffset = 0f;
+        public float rightMeshYOffset = 0f;
+
         public bool motor;
         public bool steering;
         [HideInInspector] public WheelFrictionCurve originalForwardFriction;
         [HideInInspector] public WheelFrictionCurve originalSidewaysFriction;
+
+
 
         // Hidden variables to save your manual offsets
         [HideInInspector] public Vector3 leftMeshOffset;
         [HideInInspector] public Vector3 rightMeshOffset;
         [HideInInspector] public bool offsetsInitialized;
     }
+}
 
     public class VehicleController : MonoBehaviour
     {
@@ -77,43 +85,40 @@ namespace DriftWash
             UpdateAxles(motor, steering);
         }
 
-        void UpdateAxles(float motor, float steering)
+    void UpdateAxles(float motor, float steering)
+    {
+        foreach (AxleInfo axleInfo in axleInfos)
         {
-            foreach (AxleInfo axleInfo in axleInfos)
-            {
-                HandleSteering(axleInfo, steering);
-                HandleMotor(axleInfo, motor);
-                HandleBrakesAndDrift(axleInfo);
+            HandleSteering(axleInfo, steering);
+            HandleMotor(axleInfo, motor);
+            HandleBrakesAndDrift(axleInfo);
 
-                // Change these lines to only pass the collider and the mesh!
-                if (axleInfo.leftWheel != null && axleInfo.leftRowMesh != null)
-                    UpdateWheelVisuals(axleInfo.leftWheel, axleInfo.leftRowMesh);
+            // Pass the physics collider, visual mesh, and its unique Y offset angle
+            if (axleInfo.leftWheel != null && axleInfo.leftRowMesh != null)
+                UpdateWheelVisuals(axleInfo.leftWheel, axleInfo.leftRowMesh, axleInfo.leftMeshYOffset);
 
-                if (axleInfo.rightWheel != null && axleInfo.rightRowMesh != null)
-                    UpdateWheelVisuals(axleInfo.rightWheel, axleInfo.rightRowMesh);
-            }
+            if (axleInfo.rightWheel != null && axleInfo.rightRowMesh != null)
+                UpdateWheelVisuals(axleInfo.rightWheel, axleInfo.rightRowMesh, axleInfo.rightMeshYOffset);
         }
+    }
 
-        void UpdateWheelVisuals(WheelCollider collider, Transform visualWheel)
-        {
-            Vector3 position;
-            Quaternion rotation;
-            collider.GetWorldPose(out position, out rotation);
+    void UpdateWheelVisuals(WheelCollider collider, Transform visualWheel, float yOffset)
+    {
+        Vector3 position;
+        Quaternion rotation;
+        collider.GetWorldPose(out position, out rotation);
 
-            // 1. Keep the correct physics rotation + your -90-degree twist
-            visualWheel.rotation = rotation * Quaternion.Euler(0, -90, 0);
+        visualWheel.position = position;
 
-            // 2. Instead of overriding your layout, this glues them to the collider's height and movement!
-            Vector3 localPos = collider.transform.InverseTransformPoint(position);
-            visualWheel.position = collider.transform.TransformPoint(new Vector3(0, localPos.y, 0));
-        }
+        // Apply the Y offset to the wheel's rotation while preserving the original rotation
+        visualWheel.rotation = rotation * Quaternion.Euler(0, yOffset, 0);
+    }
 
-
-        void HandleSteering(AxleInfo axleInfo, float steering)
+    void HandleSteering(AxleInfo axleInfo, float steering)
         {
             if (axleInfo.steering)
             {
-                // Add safety checks (!= null) so Unity skips empty slots safely!
+                // Add safety checks (!= null) so Unity skips empty slots safely
                 if (axleInfo.leftWheel != null) axleInfo.leftWheel.steerAngle = steering;
                 if (axleInfo.rightWheel != null) axleInfo.rightWheel.steerAngle = steering;
             }
@@ -174,4 +179,3 @@ namespace DriftWash
             return new Vector3(x ?? vector.x, y ?? vector.y, z ?? vector.z);
         }
     }
-}
