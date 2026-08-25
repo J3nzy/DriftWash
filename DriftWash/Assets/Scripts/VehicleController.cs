@@ -40,41 +40,67 @@ namespace DriftWash
 
         [Header("Steering Attributes")]
         [SerializeField] float maxSteeringAngle = 30f;
+        [SerializeField] AnimationCurve turnCurve;
+        [SerializeField] float turnStrength = 1500f;
 
         [Header("Braking and Drifting Attributes")]
+        [SerializeField] float driftSteerMultiplier = 1.5f; // Adjust this value to control the amount of steering during a drift
         [SerializeField] float brakeTorque = 10000f;
 
+        [Header("Physics")]
+        [SerializeField] Transform centerofMass;
+        [SerializeField] float downforce = 100f;
+        [SerializeField] float gravity = Physics.gravity.y;
+        [SerializeField] float lateralGScale = 10f; // Scale factor for lateral G-force
+
+        [Header("Banking")]
+        [SerializeField] float maxBankAngle = 5f;
+        [SerializeField] float bankSpeed = 2f;
+
+        [Header("Refs")]
         [SerializeField] InputReader input;
         Rigidbody rb;
 
+        Vector3 vehicleVelocity;
         float brakeVelocity;
+        float driftVelocity;
 
-        private void Start()
+    RaycastHit hit;
+
+    const float thresholdSpeed = 10;
+    const float centerOfMassOffset = -0.5f;
+    Vector3 originalCenterOfMass;
+
+    public bool IsGrounded = true;
+    public Vector3 Velocity => vehicleVelocity;
+    public float MaxSpeed => maxSpeed;
+
+    private void Start()
+    {
+        rb = GetComponent<Rigidbody>();
+        input.Enable();
+
+        rb.centerOfMass = centerofMass.localPosition;
+        originalCenterOfMass = rb.centerOfMass; // <-- FIXED: Removed .localPosition from the end
+
+        foreach (AxleInfo axleInfo in axleInfos)
         {
-            rb = GetComponent<Rigidbody>();
-            input.Enable();
+            axleInfo.originalForwardFriction = axleInfo.leftWheel.forwardFriction;
+            axleInfo.originalSidewaysFriction = axleInfo.leftWheel.sidewaysFriction;
 
-            rb.centerOfMass = new Vector3(0f, -0.5f, 0f);
-
-            foreach (AxleInfo axleInfo in axleInfos)
+            if (axleInfo.leftWheel != null && axleInfo.leftRowMesh != null)
             {
-                axleInfo.originalForwardFriction = axleInfo.leftWheel.forwardFriction;
-                axleInfo.originalSidewaysFriction = axleInfo.leftWheel.sidewaysFriction;
-
-                // Save the manual distance between your wheels and the colliders before the game starts
-                if (axleInfo.leftWheel != null && axleInfo.leftRowMesh != null)
-                {
-                    axleInfo.leftMeshOffset = axleInfo.leftWheel.transform.InverseTransformPoint(axleInfo.leftRowMesh.position);
-                }
-                if (axleInfo.rightWheel != null && axleInfo.rightRowMesh != null)
-                {
-                    axleInfo.rightMeshOffset = axleInfo.rightWheel.transform.InverseTransformPoint(axleInfo.rightRowMesh.position);
-                }
+                axleInfo.leftMeshOffset = axleInfo.leftWheel.transform.InverseTransformPoint(axleInfo.leftRowMesh.position);
+            }
+            if (axleInfo.rightWheel != null && axleInfo.rightRowMesh != null)
+            {
+                axleInfo.rightMeshOffset = axleInfo.rightWheel.transform.InverseTransformPoint(axleInfo.rightRowMesh.position);
             }
         }
+    }
 
 
-        void FixedUpdate()
+    void FixedUpdate()
         {
             float verticalInput = AdjustInput(input.Move.y);
             float horizontalInput = AdjustInput(input.Move.x);
@@ -83,7 +109,64 @@ namespace DriftWash
             float steering = maxSteeringAngle * horizontalInput;
 
             UpdateAxles(motor, steering);
+        UpdateBanking(horizontalInput);
+
+        vehicleVelocity = transform.InverseTransformDirection(rb.linearVelocity);
+
+        if (IsGrounded)
+        {
+            HandleGroundedMovement(verticalInput, horizontalInput);
+        } else
+        {
+            HandleAirborneMovement(verticalInput, horizontalInput);
         }
+    }
+
+    void HandleGroundedMovement(float verticalInput, float horizontalInput)
+    {
+        // Turning logic
+        if (Mathf.Abs(verticalInput) > 0.1f || Mathf.Abs(vehicleVelocity.z) > 1)
+        {
+            float turnMultiplier = Mathf.Clamp01(turnCurve.Evaluate(vehicleVelocity.magnitude / maxSpeed));
+            rb.AddTorque(Vector3.up * horizontalInput * Mathf.Sign(vehicleVelocity.z) * turnStrength * 100 * turnMultiplier);
+        }
+
+        // Acceleration logic
+        if (!input.IsBraking)
+        {
+            float targetSpeed = verticalInput * maxSpeed;
+            Vector3 forwardWithoutY = new Vector3(transform.forward.x, 0f, transform.forward.z).normalized; // <-- FIXED: Native Vector3 calculation without .With()
+            rb.linearVelocity = Vector3.Lerp(rb.linearVelocity, forwardWithoutY * targetSpeed, Time.deltaTime);
+        }
+
+        // Downforce logic
+        float speedFactor = Mathf.Clamp01(rb.linearVelocity.magnitude / maxSpeed);
+        float lateralG = Mathf.Abs(Vector3.Dot(rb.linearVelocity, transform.right));
+        float downForceFactor = Mathf.Max(speedFactor, lateralG / lateralGScale);
+        rb.AddForce(-transform.up * downforce * rb.mass * downForceFactor);
+
+        // Shift center of mass based on speed and lateral G-force
+        float speed = rb.linearVelocity.magnitude;
+        Vector3 centerOfMassAdjustment = (speed > thresholdSpeed)
+            ? new Vector3(0f, 0f, Mathf.Abs(verticalInput) > 0.1f ? Mathf.Sign(verticalInput) * centerOfMassOffset : 0f) // <-- FIXED: Corrected ternary syntax and bracket placement
+            : Vector3.zero;
+        rb.centerOfMass = originalCenterOfMass + centerOfMassAdjustment;
+    }
+
+    void UpdateBanking (float horizontalInput)
+    {
+        // Calculate the target bank angle based on horizontal input
+        float targetBankAngle = horizontalInput * -maxBankAngle;
+        Vector3 currentEuler = transform.localEulerAngles;
+        currentEuler.z = Mathf.LerpAngle(a: currentEuler.z, b: targetBankAngle, t: Time.deltaTime * bankSpeed);
+        transform.localEulerAngles = currentEuler;
+    }
+
+    void HandleAirborneMovement(float verticalInput, float horizontalInput)
+    {
+        // Apply gravity to the vehicle when airborne
+        rb.angularVelocity = Vector3.Lerp(a: rb.linearVelocity, b: rb.linearVelocity + Vector3.down * gravity, t: Time.deltaTime * gravity);
+    }
 
     void UpdateAxles(float motor, float steering)
     {
