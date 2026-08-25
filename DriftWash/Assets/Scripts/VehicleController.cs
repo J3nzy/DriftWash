@@ -8,10 +8,17 @@ namespace DriftWash
     {
         public WheelCollider leftWheel;
         public WheelCollider rightWheel;
+        public Transform leftRowMesh;
+        public Transform rightRowMesh;
         public bool motor;
         public bool steering;
-        public WheelFrictionCurve originalForwardFriction;
-        public WheelFrictionCurve originalSidewaysFriction;
+        [HideInInspector] public WheelFrictionCurve originalForwardFriction;
+        [HideInInspector] public WheelFrictionCurve originalSidewaysFriction;
+
+        // Hidden variables to save your manual offsets
+        [HideInInspector] public Vector3 leftMeshOffset;
+        [HideInInspector] public Vector3 rightMeshOffset;
+        [HideInInspector] public bool offsetsInitialized;
     }
 
     public class VehicleController : MonoBehaviour
@@ -45,6 +52,16 @@ namespace DriftWash
             {
                 axleInfo.originalForwardFriction = axleInfo.leftWheel.forwardFriction;
                 axleInfo.originalSidewaysFriction = axleInfo.leftWheel.sidewaysFriction;
+
+                // Save the manual distance between your wheels and the colliders before the game starts
+                if (axleInfo.leftWheel != null && axleInfo.leftRowMesh != null)
+                {
+                    axleInfo.leftMeshOffset = axleInfo.leftWheel.transform.InverseTransformPoint(axleInfo.leftRowMesh.position);
+                }
+                if (axleInfo.rightWheel != null && axleInfo.rightRowMesh != null)
+                {
+                    axleInfo.rightMeshOffset = axleInfo.rightWheel.transform.InverseTransformPoint(axleInfo.rightRowMesh.position);
+                }
             }
         }
 
@@ -67,24 +84,28 @@ namespace DriftWash
                 HandleSteering(axleInfo, steering);
                 HandleMotor(axleInfo, motor);
                 HandleBrakesAndDrift(axleInfo);
-                UpdateWheelVisuals(axleInfo.leftWheel);
-                UpdateWheelVisuals(axleInfo.rightWheel);
+
+                // Change these lines to only pass the collider and the mesh!
+                if (axleInfo.leftWheel != null && axleInfo.leftRowMesh != null)
+                    UpdateWheelVisuals(axleInfo.leftWheel, axleInfo.leftRowMesh);
+
+                if (axleInfo.rightWheel != null && axleInfo.rightRowMesh != null)
+                    UpdateWheelVisuals(axleInfo.rightWheel, axleInfo.rightRowMesh);
             }
         }
 
-
-        void UpdateWheelVisuals(WheelCollider collider)
+        void UpdateWheelVisuals(WheelCollider collider, Transform visualWheel)
         {
-            if (collider.transform.childCount == 0) return;
-
-            Transform visualWheel = collider.transform.GetChild(0);
-
             Vector3 position;
             Quaternion rotation;
             collider.GetWorldPose(out position, out rotation);
 
-            visualWheel.transform.position = position;
-            visualWheel.transform.rotation = rotation;
+            // 1. Keep the correct physics rotation + your -90-degree twist
+            visualWheel.rotation = rotation * Quaternion.Euler(0, -90, 0);
+
+            // 2. Instead of overriding your layout, this glues them to the collider's height and movement!
+            Vector3 localPos = collider.transform.InverseTransformPoint(position);
+            visualWheel.position = collider.transform.TransformPoint(new Vector3(0, localPos.y, 0));
         }
 
 
@@ -92,21 +113,21 @@ namespace DriftWash
         {
             if (axleInfo.steering)
             {
-                axleInfo.leftWheel.steerAngle = steering;
-                axleInfo.rightWheel.steerAngle = steering;
+                // Add safety checks (!= null) so Unity skips empty slots safely!
+                if (axleInfo.leftWheel != null) axleInfo.leftWheel.steerAngle = steering;
+                if (axleInfo.rightWheel != null) axleInfo.rightWheel.steerAngle = steering;
             }
         }
-
 
         void HandleMotor(AxleInfo axleInfo, float motor)
         {
             if (axleInfo.motor)
             {
-                axleInfo.leftWheel.motorTorque = motor;
-                axleInfo.rightWheel.motorTorque = motor;
+                // Add safety checks here too
+                if (axleInfo.leftWheel != null) axleInfo.leftWheel.motorTorque = motor;
+                if (axleInfo.rightWheel != null) axleInfo.rightWheel.motorTorque = motor;
             }
         }
-
 
         void HandleBrakesAndDrift(AxleInfo axleInfo)
         {
@@ -119,15 +140,17 @@ namespace DriftWash
                     float newZ = Mathf.SmoothDamp(rb.linearVelocity.z, 0, ref brakeVelocity, 1f);
                     rb.linearVelocity = rb.linearVelocity.With(z: newZ);
 
-                    axleInfo.leftWheel.brakeTorque = brakeTorque;
-                    axleInfo.rightWheel.brakeTorque = brakeTorque;
+                    // Add safety checks for braking
+                    if (axleInfo.leftWheel != null) axleInfo.leftWheel.brakeTorque = brakeTorque;
+                    if (axleInfo.rightWheel != null) axleInfo.rightWheel.brakeTorque = brakeTorque;
                 }
                 else
                 {
                     rb.constraints = RigidbodyConstraints.None;
 
-                    axleInfo.leftWheel.brakeTorque = 0;
-                    axleInfo.rightWheel.brakeTorque = 0;
+                    // Add safety checks for releasing brakes
+                    if (axleInfo.leftWheel != null) axleInfo.leftWheel.brakeTorque = 0;
+                    if (axleInfo.rightWheel != null) axleInfo.rightWheel.brakeTorque = 0;
                 }
             }
         }
