@@ -8,8 +8,8 @@ PhysicsMaterial:
   m_PrefabAsset: {fileID: 0}
   m_Name: Slippery_Car
   serializedVersion: 2
-  m_DynamicFriction: 1.05
-  m_StaticFriction: 0.66
+  m_DynamicFriction: 0.6
+  m_StaticFriction: 0.6
   m_Bounciness: 0
-  m_FrictionCombine: 2
+  m_FrictionCombine: 0
   m_BounceCombine: 0
