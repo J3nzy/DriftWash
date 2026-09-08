@@ -8,6 +8,7 @@ namespace DriftWash
     {
         public Vector2 Move => inputActions.Player.Move.ReadValue<Vector2>();
         public bool IsBraking => inputActions.Player.Brake.ReadValue<float>() > 0;
+        public bool IsSprinting => inputActions.Player.Sprint.ReadValue<float>() > 0;
 
         private InputSystem_Actions inputActions;
 

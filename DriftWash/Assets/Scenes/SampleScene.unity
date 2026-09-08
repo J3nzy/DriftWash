@@ -1459,8 +1459,42 @@ GameObject:
   m_CorrespondingSourceObject: {fileID: 6475036041665708925, guid: e31145d00119df8498702af1881fd7c5, type: 3}
   m_PrefabInstance: {fileID: 1801722192}
   m_PrefabAsset: {fileID: 0}
---- !u!65 &893130035
-BoxCollider:
+--- !u!114 &893130036
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 893130031}
+  m_Enabled: 0
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: dd9f42d8115321548bfdd09e4d708445, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::DriftWash.FloorGridSpawner
+  dirtStickerPrefab: {fileID: 502441290024953034, guid: 0390aaa7e1ef56f45a210ffb7c651ce4, type: 3}
+  gridWidth: 100
+  gridLength: 100
+  spacing: 0.1
+  obstacleLayer:
+    serializedVersion: 2
+    m_Bits: 64
+  detectionRadius: 0.2
+--- !u!114 &893130037
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 893130031}
+  m_Enabled: 0
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0d70333f5e468ab4e9a438d81575b3d3, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::DriftWash.CleaningTile
+  cleanMaterial: {fileID: 0}
+  cleanParticles: {fileID: 0}
+--- !u!64 &893130041
+MeshCollider:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
@@ -1477,43 +1511,10 @@ BoxCollider:
   m_IsTrigger: 0
   m_ProvidesContacts: 0
   m_Enabled: 1
-  serializedVersion: 3
-  m_Size: {x: 2, y: 0, z: 2}
-  m_Center: {x: 0, y: 0, z: 0}
---- !u!114 &893130036
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 893130031}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: dd9f42d8115321548bfdd09e4d708445, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::DriftWash.FloorGridSpawner
-  dirtStickerPrefab: {fileID: 502441290024953034, guid: 0390aaa7e1ef56f45a210ffb7c651ce4, type: 3}
-  gridWidth: 1000
-  gridLength: 1000
-  spacing: 0.1
-  obstacleLayer:
-    serializedVersion: 2
-    m_Bits: 64
-  detectionRadius: 0.2
---- !u!114 &893130037
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 893130031}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 0d70333f5e468ab4e9a438d81575b3d3, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::DriftWash.CleaningTile
-  cleanMaterial: {fileID: 0}
-  cleanParticles: {fileID: 0}
+  serializedVersion: 5
+  m_Convex: 0
+  m_CookingOptions: 30
+  m_Mesh: {fileID: 6360135341456839332, guid: e31145d00119df8498702af1881fd7c5, type: 3}
 --- !u!1 &956997931
 GameObject:
   m_ObjectHideFlags: 0
@@ -16533,13 +16534,13 @@ PrefabInstance:
     m_AddedComponents:
     - targetCorrespondingSourceObject: {fileID: 6475036041665708925, guid: e31145d00119df8498702af1881fd7c5, type: 3}
       insertIndex: -1
-      addedObject: {fileID: 893130035}
-    - targetCorrespondingSourceObject: {fileID: 6475036041665708925, guid: e31145d00119df8498702af1881fd7c5, type: 3}
-      insertIndex: -1
       addedObject: {fileID: 893130037}
     - targetCorrespondingSourceObject: {fileID: 6475036041665708925, guid: e31145d00119df8498702af1881fd7c5, type: 3}
       insertIndex: -1
       addedObject: {fileID: 893130036}
+    - targetCorrespondingSourceObject: {fileID: 6475036041665708925, guid: e31145d00119df8498702af1881fd7c5, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 893130041}
     - targetCorrespondingSourceObject: {fileID: 605407446884981600, guid: e31145d00119df8498702af1881fd7c5, type: 3}
       insertIndex: -1
       addedObject: {fileID: 2128511032}
