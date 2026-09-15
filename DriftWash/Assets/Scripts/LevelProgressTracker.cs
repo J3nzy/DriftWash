@@ -12,15 +12,17 @@ public class LevelProgressTracker : MonoBehaviour
     [Header("Win Target")]
     public float texturePercentToWin = 55f;
 
-    [Header("Floor Shine Animation")]
+    [Header("Material Flash Effects")]
     public MeshRenderer floorMeshRenderer;
-    public Color shineGlowColor = new Color(15f, 15f, 15f, 1f); // Boosted to 15x for white tiles!
+    public Material glowMaterial; // <-- Drag your new FloorGlowMaterial here!
     public float shineDuration = 1.0f;
 
     private float realCleanPercentage = 0f;
     private bool levelFinished = false;
     private Texture2D readableTexture;
-    private Material floorMaterial;
+
+    private Material originalMaterial;
+    private Material runtimeGlowInstance;
 
     void Start()
     {
@@ -29,11 +31,7 @@ public class LevelProgressTracker : MonoBehaviour
 
         if (floorMeshRenderer != null)
         {
-            floorMaterial = floorMeshRenderer.material;
-            if (floorMaterial.HasProperty("_EmissionColour"))
-            {
-                floorMaterial.SetColor("_EmissionColour", Color.black);
-            }
+            originalMaterial = floorMeshRenderer.sharedMaterial;
         }
 
         StartCoroutine(ProgressEvaluationLoop());
@@ -76,41 +74,58 @@ public class LevelProgressTracker : MonoBehaviour
                     if (progressBarImage != null) progressBarImage.fillAmount = 1f;
                     if (progressText != null) progressText.text = "100%";
 
-                    // Force texture clean and trigger white tile flash
                     RenderTexture.active = maskTexture;
                     GL.Clear(true, true, Color.white);
                     RenderTexture.active = previousActive;
 
-                    StartCoroutine(AnimateFloorShineGlow());
+                    StartCoroutine(AnimateMaterialSwapGlow());
                     Debug.Log("LEVEL COMPLETE! Full floor sheet polished!");
                 }
             }
         }
     }
 
-    System.Collections.IEnumerator AnimateFloorShineGlow()
+    System.Collections.IEnumerator AnimateMaterialSwapGlow()
     {
-        if (floorMaterial == null) yield break;
+        if (floorMeshRenderer == null || glowMaterial == null) yield break;
+
+        // Create an instance of the glow material so we don't permanently alter the project asset
+        runtimeGlowInstance = new Material(glowMaterial);
+
+        // SWAP IN: Put the bright glowing material onto the floor mesh
+        floorMeshRenderer.material = runtimeGlowInstance;
+
         float elapsedTime = 0f;
         float halfDuration = shineDuration * 0.5f;
+        Color targetGlowColor = runtimeGlowInstance.HasProperty("_EmissionColor") ? runtimeGlowInstance.GetColor("_EmissionColor") : Color.white * 5f;
 
+        // Fade In: Build up the emission intensity
         while (elapsedTime < halfDuration)
         {
             elapsedTime += Time.deltaTime;
-            Color currentGlow = Color.Lerp(Color.black, shineGlowColor, elapsedTime / halfDuration);
-            floorMaterial.SetColor("_EmissionColour", currentGlow);
+            float t = elapsedTime / halfDuration;
+            if (runtimeGlowInstance.HasProperty("_EmissionColor"))
+                runtimeGlowInstance.SetColor("_EmissionColor", Color.Lerp(Color.black, targetGlowColor, t));
             yield return null;
         }
 
         elapsedTime = 0f;
+
+        // Fade Out: Bring down the emission brightness
         while (elapsedTime < halfDuration)
         {
             elapsedTime += Time.deltaTime;
-            Color currentGlow = Color.Lerp(shineGlowColor, Color.black, elapsedTime / halfDuration);
-            floorMaterial.SetColor("_EmissionColour", currentGlow);
+            float t = elapsedTime / halfDuration;
+            if (runtimeGlowInstance.HasProperty("_EmissionColor"))
+                runtimeGlowInstance.SetColor("_EmissionColor", Color.Lerp(targetGlowColor, Color.black, t));
             yield return null;
         }
-        floorMaterial.SetColor("_EmissionColour", Color.black);
+
+        // SWAP OUT: Put your beautiful original clean tile material back
+        floorMeshRenderer.material = originalMaterial;
+
+        // Clean up the temporary material instance from memory
+        Destroy(runtimeGlowInstance);
     }
 
     void OnDestroy() { if (readableTexture != null) Destroy(readableTexture); }
