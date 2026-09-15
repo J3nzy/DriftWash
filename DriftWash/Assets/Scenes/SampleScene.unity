@@ -1462,6 +1462,7 @@ GameObject:
   - component: {fileID: 735612844}
   - component: {fileID: 735612847}
   - component: {fileID: 735612848}
+  - component: {fileID: 735612849}
   m_Layer: 0
   m_Name: Vehicle
   m_TagString: Player
@@ -1606,6 +1607,24 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 1.16, y: 2.3, z: 1.91}
   m_Center: {x: 0, y: 0, z: 0}
+--- !u!114 &735612849
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 735612842}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 20410b1d87e5555458fb642050f522c6, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::BeaconFlasher
+  bulbMeshRenderer: {fileID: 1530775214}
+  fadeInDuration: 0.7
+  fadeOutDuration: 0.7
+  stayOffDuration: 0.2
+  baseOrangeColor: {r: 1, g: 0.4, b: 0, a: 1}
+  activeGlowColor: {r: 8, g: 4, b: 0, a: 4}
 --- !u!1 &746147956 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: -7269468976407286151, guid: e31145d00119df8498702af1881fd7c5, type: 3}
@@ -2608,6 +2627,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: -8477462735857928430, guid: 73688d21f1cec1840b5ffa3b25ea5e78, type: 3}
+      propertyPath: m_Name
+      value: Light
+      objectReference: {fileID: 0}
     - target: {fileID: -8312404052110562872, guid: 73688d21f1cec1840b5ffa3b25ea5e78, type: 3}
       propertyPath: m_SelectedEditorRenderState
       value: 2
@@ -2628,6 +2651,10 @@ PrefabInstance:
       propertyPath: m_LocalPosition.z
       value: 0.53
       objectReference: {fileID: 0}
+    - target: {fileID: 67746802983758421, guid: 73688d21f1cec1840b5ffa3b25ea5e78, type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
+      value: 
+      objectReference: {fileID: 2100000, guid: bcf357644c3ed0245b942fac7c6ba225, type: 2}
     - target: {fileID: 919132149155446097, guid: 73688d21f1cec1840b5ffa3b25ea5e78, type: 3}
       propertyPath: m_Name
       value: VisualVehicle
@@ -2648,6 +2675,11 @@ PrefabInstance:
 --- !u!4 &1515636322 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -8679921383154817045, guid: 73688d21f1cec1840b5ffa3b25ea5e78, type: 3}
+  m_PrefabInstance: {fileID: 1515636321}
+  m_PrefabAsset: {fileID: 0}
+--- !u!23 &1530775214 stripped
+MeshRenderer:
+  m_CorrespondingSourceObject: {fileID: 67746802983758421, guid: 73688d21f1cec1840b5ffa3b25ea5e78, type: 3}
   m_PrefabInstance: {fileID: 1515636321}
   m_PrefabAsset: {fileID: 0}
 --- !u!1 &1550966677 stripped
@@ -14794,6 +14826,10 @@ PrefabInstance:
     - target: {fileID: 6462475366665724099, guid: e31145d00119df8498702af1881fd7c5, type: 3}
       propertyPath: m_Layer
       value: 6
+      objectReference: {fileID: 0}
+    - target: {fileID: 6475036041665708925, guid: e31145d00119df8498702af1881fd7c5, type: 3}
+      propertyPath: m_Name
+      value: Floor
       objectReference: {fileID: 0}
     - target: {fileID: 6475036041665708925, guid: e31145d00119df8498702af1881fd7c5, type: 3}
       propertyPath: m_Layer
