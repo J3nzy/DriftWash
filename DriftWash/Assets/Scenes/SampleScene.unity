@@ -559,6 +559,7 @@ GameObject:
   m_Component:
   - component: {fileID: 327316896}
   - component: {fileID: 327316897}
+  - component: {fileID: 327316900}
   m_Layer: 5
   m_Name: CleanProgressSlider
   m_TagString: Untagged
@@ -579,7 +580,7 @@ RectTransform:
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 475028749}
-  - {fileID: 495430676}
+  - {fileID: 1097442262}
   - {fileID: 2075041408}
   m_Father: {fileID: 917961743}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
@@ -639,6 +640,14 @@ MonoBehaviour:
   m_OnValueChanged:
     m_PersistentCalls:
       m_Calls: []
+--- !u!222 &327316900
+CanvasRenderer:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 327316895}
+  m_CullTransparentMesh: 1
 --- !u!1 &330585543
 GameObject:
   m_ObjectHideFlags: 0
@@ -1207,42 +1216,6 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 1.9999999, y: 2, z: 2}
   m_Center: {x: 0, y: 0.00000011920929, z: 0.00000023841858}
---- !u!1 &495430675
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 495430676}
-  m_Layer: 5
-  m_Name: Fill Area
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!224 &495430676
-RectTransform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 495430675}
-  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children:
-  - {fileID: 1097442262}
-  m_Father: {fileID: 327316896}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0, y: 0.25}
-  m_AnchorMax: {x: 1, y: 0.75}
-  m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 0, y: 0}
-  m_Pivot: {x: 0.5, y: 0.5}
 --- !u!1 &513295710
 GameObject:
   m_ObjectHideFlags: 0
@@ -1831,14 +1804,41 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::LevelProgressTracker
   maskTexture: {fileID: 8400000, guid: ff50aa6ea992e2a49bef286da69fd971, type: 2}
-  brushShapeTexture: {fileID: 2800000, guid: 2c45f4f287a305e4ea2e6efdef0d5815, type: 3}
   progressBarImage: {fileID: 1097442263}
   progressText: {fileID: 2075041409}
   texturePercentToWin: 55
-  winBufferPercentage: 5
   floorMeshRenderer: {fileID: 893130043}
-  shineGlowColor: {r: 2, g: 2, b: 2, a: 1}
+  glowMaterial: {fileID: 2100000, guid: e8a7b5dfde00282459f964bd1ec3118c, type: 2}
   shineDuration: 1
+--- !u!114 &893130046
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 893130031}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ae7a9b5ac8306594e862d4a7b96d3b0c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::GameModeLoader
+--- !u!114 &893130047
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 893130031}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 97e8085ba174fb1438c1b17c92274893, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PuddleProgressTracker
+  progressBarImage: {fileID: 1097442263}
+  progressText: {fileID: 2075041409}
+  floorMeshRenderer: {fileID: 893130043}
+  glowMaterial: {fileID: 2100000, guid: e8a7b5dfde00282459f964bd1ec3118c, type: 2}
+  shineDuration: 1.2
 --- !u!1 &917961739
 GameObject:
   m_ObjectHideFlags: 0
@@ -2286,12 +2286,12 @@ RectTransform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
-  m_Father: {fileID: 495430676}
+  m_Father: {fileID: 327316896}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 0, y: 0}
   m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 0, y: 0}
+  m_SizeDelta: {x: 0, y: -36.237305}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1097442263
 MonoBehaviour:
@@ -2313,12 +2313,12 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 10905, guid: 0000000000000000f000000000000000, type: 0}
+  m_Sprite: {fileID: 10907, guid: 0000000000000000f000000000000000, type: 0}
   m_Type: 1
   m_PreserveAspect: 0
   m_FillCenter: 1
-  m_FillMethod: 4
-  m_FillAmount: 1
+  m_FillMethod: 0
+  m_FillAmount: 0
   m_FillClockwise: 1
   m_FillOrigin: 0
   m_UseSpriteMesh: 0
@@ -17071,6 +17071,12 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 6475036041665708925, guid: e31145d00119df8498702af1881fd7c5, type: 3}
       insertIndex: -1
       addedObject: {fileID: 893130045}
+    - targetCorrespondingSourceObject: {fileID: 6475036041665708925, guid: e31145d00119df8498702af1881fd7c5, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 893130047}
+    - targetCorrespondingSourceObject: {fileID: 6475036041665708925, guid: e31145d00119df8498702af1881fd7c5, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 893130046}
     - targetCorrespondingSourceObject: {fileID: 605407446884981600, guid: e31145d00119df8498702af1881fd7c5, type: 3}
       insertIndex: -1
       addedObject: {fileID: 2128511032}
