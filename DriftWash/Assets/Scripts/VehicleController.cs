@@ -12,6 +12,9 @@ namespace DriftWash
         [SerializeField] float coastDeceleration = 5f;
         [SerializeField] float turnSpeed = 90f;
 
+        [Tooltip("How smoothly the vehicle shifts speeds between normal driving and cleaning mode.")]
+        [SerializeField] float speedTransitionSpeed = 15f; // <-- NEW: Smooths out the shifting jolts
+
         [Header("Drift Physics Settings")]
         [Tooltip("Select the key to start drifting/sliding.")]
         [SerializeField] Key driftKey = Key.Space;
@@ -26,7 +29,7 @@ namespace DriftWash
         [SerializeField] float driftTurnMultiplier = 1.5f;
 
         [Tooltip("How fast the car slows down when you let go of the gas WHILE DRIFTING. Lower = slides longer without power.")]
-        [SerializeField] float driftCoastDeceleration = 1f; // <-- NEW: Separate slow-down speed for slides
+        [SerializeField] float driftCoastDeceleration = 1f;
 
         [Header("Visual Drift Angling")]
         [Tooltip("Drag the child GameObject that holds your car mesh here. It will rotate sideways visually!")]
@@ -51,16 +54,19 @@ namespace DriftWash
         [SerializeField] InputReader input;
         Rigidbody rb;
 
-        // Internal tracker to smoothly blend the vehicle's grip state
+        // Internal trackers
         private float currentTractionGrip = 1f;
+        private float activeMaxSpeed; // <-- NEW: Tracks the current blended speed limit smoothly
 
         private void Start()
         {
             rb = GetComponent<Rigidbody>();
             input.Enable();
 
-            // Completely lock the physics body so it can never tip over or flip backwards
             rb.constraints = RigidbodyConstraints.FreezeRotationX | RigidbodyConstraints.FreezeRotationZ;
+
+            // Initialize at full normal driving speed
+            activeMaxSpeed = maxSpeed;
         }
 
         void FixedUpdate()
@@ -68,32 +74,34 @@ namespace DriftWash
             float verticalInput = AdjustInput(input.Move.y);
             float horizontalInput = AdjustInput(input.Move.x);
 
-            // 1. CLEAN GEAR CLAMP
-            float currentMaxSpeed = maxSpeed;
-
+            // 1. SMOOTH GEAR TRANSITION FIXED
+            float targetMaxSpeed = maxSpeed;
             if (Keyboard.current != null && Keyboard.current.leftShiftKey.isPressed)
             {
-                currentMaxSpeed = scrubMaxSpeed;
-
-                if (rb.linearVelocity.magnitude > scrubMaxSpeed)
-                {
-                    rb.linearVelocity = rb.linearVelocity.normalized * scrubMaxSpeed;
-                }
+                targetMaxSpeed = scrubMaxSpeed;
             }
 
-            // 3. DRIFT CONDITION CHECK (Moved up so deceleration math can use it)
+            // Smoothly slide the active limit towards our target mode limit
+            activeMaxSpeed = Mathf.MoveTowards(activeMaxSpeed, targetMaxSpeed, speedTransitionSpeed * Time.deltaTime);
+
+            // Dynamically cap the velocity based on our smooth transition limit
+            if (rb.linearVelocity.magnitude > activeMaxSpeed)
+            {
+                rb.linearVelocity = rb.linearVelocity.normalized * activeMaxSpeed;
+            }
+
+            // 3. DRIFT CONDITION CHECK
             bool isDriftKeyPressed = Keyboard.current != null && Keyboard.current[driftKey].isPressed && rb.linearVelocity.magnitude > 2f;
 
             // 2. ARCADE ACCELERATION & SMOOTH COASTING
             if (Mathf.Abs(verticalInput) > 0.05f)
             {
-                Vector3 targetVelocity = transform.forward * verticalInput * currentMaxSpeed;
+                Vector3 targetVelocity = transform.forward * verticalInput * activeMaxSpeed;
                 targetVelocity.y = rb.linearVelocity.y;
                 rb.linearVelocity = Vector3.MoveTowards(rb.linearVelocity, targetVelocity, acceleration * Time.deltaTime);
             }
             else
             {
-                // NEW FIX: Pick normal stopping speed or dynamic slippery slide coasting speed based on drift state
                 float activeDeceleration = isDriftKeyPressed ? driftCoastDeceleration : coastDeceleration;
 
                 Vector3 targetVelocity = new Vector3(0f, rb.linearVelocity.y, 0f);
