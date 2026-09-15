@@ -25,6 +25,19 @@ public class BeaconFlasher : MonoBehaviour
 
     void Start()
     {
+        // Check if the user turned off the beacon in the main menu settings
+        int beaconActiveSetting = PlayerPrefs.GetInt("BeaconActive", 1);
+        if (beaconActiveSetting == 0)
+        {
+            // Turn off the light permanently and disable this script component
+            if (bulbMeshRenderer != null)
+            {
+                bulbMeshRenderer.material.SetColor("_EmissionColor", baseOrangeColor);
+            }
+            enabled = false;
+            return;
+        }
+
         if (bulbMeshRenderer != null)
         {
             bulbMaterial = bulbMeshRenderer.material;
@@ -32,8 +45,6 @@ public class BeaconFlasher : MonoBehaviour
             {
                 bulbMaterial.EnableKeyword("_EMISSION");
             }
-
-            // Start the infinite independent timer loop
             StartCoroutine(FlashRoutineLoop());
         }
         else
