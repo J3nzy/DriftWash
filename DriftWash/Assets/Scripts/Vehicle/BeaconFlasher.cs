@@ -7,14 +7,9 @@ public class BeaconFlasher : MonoBehaviour
     public MeshRenderer bulbMeshRenderer;
 
     [Header("Arcade Pulse Durations")]
-    [Tooltip("How long (in seconds) the light takes to swell up to full brightness.")]
     public float fadeInDuration = 0.25f;
-
-    [Tooltip("How long (in seconds) the light takes to dim completely back to normal glass.")]
     public float fadeOutDuration = 0.25f;
-
-    [Tooltip("How long (in seconds) the light stays completely dark before flashing again.")]
-    public float stayOffDuration = 0.4f; // <-- Control your exact rest time directly here!
+    public float stayOffDuration = 0.4f;
 
     [Header("Glow Colours")]
     [ColorUsage(true, false)] public Color baseOrangeColor = new Color(1f, 0.4f, 0f, 1f);
@@ -22,22 +17,10 @@ public class BeaconFlasher : MonoBehaviour
 
     private Material bulbMaterial;
     private bool isFlasherRunning = true;
+    private Coroutine flashCoroutine;
 
     void Start()
     {
-        // Check if the user turned off the beacon in the main menu settings
-        int beaconActiveSetting = PlayerPrefs.GetInt("BeaconActive", 1);
-        if (beaconActiveSetting == 0)
-        {
-            // Turn off the light permanently and disable this script component
-            if (bulbMeshRenderer != null)
-            {
-                bulbMeshRenderer.material.SetColor("_EmissionColor", baseOrangeColor);
-            }
-            enabled = false;
-            return;
-        }
-
         if (bulbMeshRenderer != null)
         {
             bulbMaterial = bulbMeshRenderer.material;
@@ -45,7 +28,9 @@ public class BeaconFlasher : MonoBehaviour
             {
                 bulbMaterial.EnableKeyword("_EMISSION");
             }
-            StartCoroutine(FlashRoutineLoop());
+
+            // Instantly sync up to whatever was clicked in the Main Menu settings on startup
+            RefreshBeaconActiveState();
         }
         else
         {
@@ -54,16 +39,49 @@ public class BeaconFlasher : MonoBehaviour
         }
     }
 
-    IEnumerator FlashRoutineLoop()
+    // This public function can be called by any script at any time to instantly update the light
+    public void RefreshBeaconActiveState()
+    {
+        // 1 = On (Default), 0 = Off
+        int beaconActiveSetting = PlayerPrefs.GetInt("BeaconActive", 1);
+
+        if (beaconActiveSetting == 0)
+        {
+            // Turn off the light completely
+            isFlasherRunning = false;
+            if (flashCoroutine != null)
+            {
+                StopCoroutine(flashCoroutine);
+                flashCoroutine = null;
+            }
+            if (bulbMaterial != null)
+            {
+                bulbMaterial.SetColor("_EmissionColor", Color.black);
+            }
+            Debug.Log("[BeaconFlasher] Light forced OFF.");
+        }
+        else
+        {
+            // Turn on the light loop
+            isFlasherRunning = true;
+            if (flashCoroutine == null)
+            {
+                flashCoroutine = StartCoroutine(FlashRoutineLoopUnscaled());
+                Debug.Log("[BeaconFlasher] Light forced ON.");
+            }
+        }
+    }
+
+    IEnumerator FlashRoutineLoopUnscaled()
     {
         while (isFlasherRunning && bulbMaterial != null)
         {
             float elapsedTime = 0f;
 
-            // PHASE 1: Smooth, satisfying Fade In
+            // Fade In (Uses unscaled delta time so it works while paused!)
             while (elapsedTime < fadeInDuration)
             {
-                elapsedTime += Time.deltaTime;
+                elapsedTime += Time.unscaledDeltaTime;
                 float t = Mathf.SmoothStep(0f, 1f, elapsedTime / fadeInDuration);
                 bulbMaterial.SetColor("_EmissionColor", Color.Lerp(baseOrangeColor, activeGlowColor, t));
                 yield return null;
@@ -71,20 +89,19 @@ public class BeaconFlasher : MonoBehaviour
 
             elapsedTime = 0f;
 
-            // PHASE 2: Smooth, satisfying Fade Out
+            // Fade Out
             while (elapsedTime < fadeOutDuration)
             {
-                elapsedTime += Time.deltaTime;
+                elapsedTime += Time.unscaledDeltaTime;
                 float t = Mathf.SmoothStep(0f, 1f, elapsedTime / fadeOutDuration);
                 bulbMaterial.SetColor("_EmissionColor", Color.Lerp(activeGlowColor, baseOrangeColor, t));
                 yield return null;
             }
 
-            // Hard reset to completely off
             bulbMaterial.SetColor("_EmissionColor", baseOrangeColor);
 
-            // PHASE 3: The exact rest window delay!
-            yield return new WaitForSeconds(stayOffDuration);
+            // Stay off for the rest duration
+            yield return new WaitForSecondsRealtime(stayOffDuration);
         }
     }
 

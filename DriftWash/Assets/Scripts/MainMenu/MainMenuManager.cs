@@ -13,13 +13,13 @@ public class MainMenuManager : MonoBehaviour
 
     void Start()
     {
-        // Make sure only the Main Menu panel is visible on startup
         ShowPanel(mainMenuPanel);
 
-        // Initialize the Beacon setting if it hasn't been set yet (1 = On, 0 = Off)
+        // If a new player opens the game for the first time, default the light to On (1)
         if (!PlayerPrefs.HasKey("BeaconActive"))
         {
             PlayerPrefs.SetInt("BeaconActive", 1);
+            PlayerPrefs.Save();
         }
     }
 
