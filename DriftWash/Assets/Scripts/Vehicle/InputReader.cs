@@ -9,6 +9,7 @@ namespace DriftWash
         public Vector2 Move => inputActions.Player.Move.ReadValue<Vector2>();
         public bool IsBraking => inputActions.Player.Brake.ReadValue<float>() > 0;
         public bool IsSprinting => inputActions.Player.Sprint.ReadValue<float>() > 0;
+        public float ZoomValue => inputActions.Player.Zoom.ReadValue<float>();
 
         private InputSystem_Actions inputActions;
 
@@ -29,12 +30,15 @@ namespace DriftWash
         public void OnFire(InputAction.CallbackContext context) { }
         public void OnBrake(InputAction.CallbackContext context) { }
 
-        // Required Interface Actions (Left Blank to Fix Errors
+        // Required Interface Actions (Left Blank to Fix Errors)
         public void OnAttack(InputAction.CallbackContext context) { }
         public void OnInteract(InputAction.CallbackContext context) { }
         public void OnCrouch(InputAction.CallbackContext context) { }
         public void OnPrevious(InputAction.CallbackContext context) { }
         public void OnNext(InputAction.CallbackContext context) { }
         public void OnSprint(InputAction.CallbackContext context) { }
+
+        // Added the missing interface method required by Unity's auto-generated map
+        public void OnZoom(InputAction.CallbackContext context) { }
     }
 }
