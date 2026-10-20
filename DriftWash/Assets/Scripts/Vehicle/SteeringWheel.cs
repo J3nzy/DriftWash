@@ -5,6 +5,9 @@ public class SteeringWheel : MonoBehaviour
     public float maxRotation = 450f;
     public float rotationSpeed = 720f;
 
+    [Header("Auto Return Settings")]
+    public float returnSpeed = 400f; // How fast the wheel snaps back to center
+
     [Header("Hand Targets")]
     public Transform leftHandTarget;
     public Transform rightHandTarget;
@@ -34,14 +37,25 @@ public class SteeringWheel : MonoBehaviour
 
     void Update()
     {
-        float input = Input.GetAxis("Horizontal");
+        // CHANGED: GetAxisRaw drops to 0 instantly when keys are released
+        float input = Input.GetAxisRaw("Horizontal");
 
-        // YOUR ORIGINAL ROTATION LOGIC (Completely Untouched)
-        wheelAngle += input * rotationSpeed * Time.deltaTime;
+        // If there is active player input, turn the wheel normally
+        if (Mathf.Abs(input) > 0.01f)
+        {
+            wheelAngle += input * rotationSpeed * Time.deltaTime;
+        }
+        // If there is NO input, automatically return the wheel angle back to 0 instantly
+        else
+        {
+            wheelAngle = Mathf.MoveTowards(wheelAngle, 0f, returnSpeed * Time.deltaTime);
+        }
+
+        // Clamp and apply the rotation
         wheelAngle = Mathf.Clamp(wheelAngle, -maxRotation, maxRotation);
         transform.localRotation = Quaternion.Euler(0f, wheelAngle, 0f);
 
-        // 2. NEW LOGIC: Force the hand targets to dynamically orbit and rotate with the wheel
+        // Force the hand targets to dynamically orbit and rotate with the wheel
         if (leftHandTarget != null)
         {
             leftHandTarget.position = transform.TransformPoint(leftOffset);
