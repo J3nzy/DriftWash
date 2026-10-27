@@ -6,7 +6,7 @@ public class LevelProgressTracker : MonoBehaviour
     public RenderTexture maskTexture;
 
     [Header("UI Components")]
-    public UnityEngine.UI.Image progressBarImage;
+    public UnityEngine.UI.Slider progressSlider; // Assign your CleanProgressSlider here
     public TMPro.TextMeshProUGUI progressText;
 
     [Header("Win Target")]
@@ -14,7 +14,7 @@ public class LevelProgressTracker : MonoBehaviour
 
     [Header("Material Flash Effects")]
     public MeshRenderer floorMeshRenderer;
-    public Material glowMaterial; // <-- Drag your new FloorGlowMaterial here!
+    public Material glowMaterial;
     public float shineDuration = 1.0f;
 
     private float realCleanPercentage = 0f;
@@ -33,6 +33,9 @@ public class LevelProgressTracker : MonoBehaviour
         {
             originalMaterial = floorMeshRenderer.sharedMaterial;
         }
+
+        // Set slider to 0 at start
+        if (progressSlider != null) progressSlider.value = 0f;
 
         StartCoroutine(ProgressEvaluationLoop());
     }
@@ -66,12 +69,14 @@ public class LevelProgressTracker : MonoBehaviour
                 float playerFriendlyPercentage = Mathf.Clamp01(realCleanPercentage / texturePercentToWin) * 100f;
 
                 if (progressText != null) progressText.text = playerFriendlyPercentage.ToString("F0") + "%";
-                if (progressBarImage != null) progressBarImage.fillAmount = playerFriendlyPercentage / 100f;
+
+                // Directly updates the slider value between 0 and 1
+                if (progressSlider != null) progressSlider.value = playerFriendlyPercentage / 100f;
 
                 if (realCleanPercentage >= texturePercentToWin)
                 {
                     levelFinished = true;
-                    if (progressBarImage != null) progressBarImage.fillAmount = 1f;
+                    if (progressSlider != null) progressSlider.value = 1f;
                     if (progressText != null) progressText.text = "100%";
 
                     RenderTexture.active = maskTexture;
@@ -89,17 +94,13 @@ public class LevelProgressTracker : MonoBehaviour
     {
         if (floorMeshRenderer == null || glowMaterial == null) yield break;
 
-        // Create an instance of the glow material so we don't permanently alter the project asset
         runtimeGlowInstance = new Material(glowMaterial);
-
-        // SWAP IN: Put the bright glowing material onto the floor mesh
         floorMeshRenderer.material = runtimeGlowInstance;
 
         float elapsedTime = 0f;
         float halfDuration = shineDuration * 0.5f;
         Color targetGlowColor = runtimeGlowInstance.HasProperty("_EmissionColor") ? runtimeGlowInstance.GetColor("_EmissionColor") : Color.white * 5f;
 
-        // Fade In: Build up the emission intensity
         while (elapsedTime < halfDuration)
         {
             elapsedTime += Time.deltaTime;
@@ -111,7 +112,6 @@ public class LevelProgressTracker : MonoBehaviour
 
         elapsedTime = 0f;
 
-        // Fade Out: Bring down the emission brightness
         while (elapsedTime < halfDuration)
         {
             elapsedTime += Time.deltaTime;
@@ -121,10 +121,7 @@ public class LevelProgressTracker : MonoBehaviour
             yield return null;
         }
 
-        // SWAP OUT: Put your beautiful original clean tile material back
         floorMeshRenderer.material = originalMaterial;
-
-        // Clean up the temporary material instance from memory
         Destroy(runtimeGlowInstance);
     }
 
