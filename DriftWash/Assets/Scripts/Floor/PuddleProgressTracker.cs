@@ -3,12 +3,12 @@ using UnityEngine;
 public class PuddleProgressTracker : MonoBehaviour
 {
     [Header("UI Components")]
-    public UnityEngine.UI.Image progressBarImage;
+    public UnityEngine.UI.Slider progressSlider; // Assign your PuddleProgressSlider here
     public TMPro.TextMeshProUGUI progressText;
 
     [Header("Material Flash Effects")]
     public MeshRenderer floorMeshRenderer;
-    public Material glowMaterial; // <-- Drag your new FloorGlowMaterial here!
+    public Material glowMaterial; // <-- Drag your FloorGlowMaterial here!
     public float shineDuration = 1.0f;
 
     private int totalPuddlesInLevel = 0;
@@ -28,7 +28,9 @@ public class PuddleProgressTracker : MonoBehaviour
         GameObject[] puddles = GameObject.FindGameObjectsWithTag("DirtPuddle");
         totalPuddlesInLevel = puddles.Length;
 
-        UpdateUIElements(0f);
+        // Initialize slider at 0
+        if (progressSlider != null) progressSlider.value = 0f;
+        if (progressText != null) progressText.text = "0%";
     }
 
     public void OnPuddleCleaned()
@@ -36,8 +38,11 @@ public class PuddleProgressTracker : MonoBehaviour
         if (levelFinished) return;
         puddlesCleanedCount++;
 
-        float playerFriendlyPercentage = Mathf.Clamp01((float)puddlesCleanedCount / totalPuddlesInLevel) * 100f;
-        UpdateUIElements(playerFriendlyPercentage);
+        // Calculate a 0 to 1 value for the slider, and a 0 to 100 percentage for text
+        float absoluteRatio = totalPuddlesInLevel > 0 ? (float)puddlesCleanedCount / totalPuddlesInLevel : 1f;
+        float playerFriendlyPercentage = Mathf.Clamp01(absoluteRatio) * 100f;
+
+        UpdateUIElements(absoluteRatio, playerFriendlyPercentage);
 
         if (puddlesCleanedCount >= totalPuddlesInLevel)
         {
@@ -82,9 +87,9 @@ public class PuddleProgressTracker : MonoBehaviour
         Destroy(runtimeGlowInstance);
     }
 
-    void UpdateUIElements(float displayScore)
+    void UpdateUIElements(float sliderValue, float displayPercentage)
     {
-        if (progressBarImage != null) progressBarImage.fillAmount = displayScore / 100f;
-        if (progressText != null) progressText.text = displayScore.ToString("F0") + "%";
+        if (progressSlider != null) progressSlider.value = sliderValue;
+        if (progressText != null) progressText.text = displayPercentage.ToString("F0") + "%";
     }
 }
